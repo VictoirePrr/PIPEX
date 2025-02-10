@@ -6,7 +6,7 @@
 #    By: vicperri <vicperri@student.42lyon.fr>      +#+  +:+       +#+         #
 #                                                 +#+#+#+#+#+   +#+            #
 #    Created: 2024/11/12 12:55:24 by vicperri          #+#    #+#              #
-#    Updated: 2025/02/04 14:30:15 by vicperri         ###   ########lyon.fr    #
+#    Updated: 2025/02/10 14:48:06 by vicperri         ###   ########lyon.fr    #
 #                                                                              #
 # **************************************************************************** #
 
@@ -17,7 +17,7 @@ CPPFLAGS = -MMD -MP
 CCFLAGS := -Wall -Wextra -Werror -g3
 SRC_DIR := src/
 INCLUDES:= include/
-SRC := $(addprefix $(SRC_DIR), )
+SRC := $(addprefix $(SRC_DIR), pipex.c)
 
 OBJ_DIR := .obj/
 OBJ := $(SRC:$(SRC_DIR)%.c=$(OBJ_DIR)%.o)
