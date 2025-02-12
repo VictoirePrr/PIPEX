@@ -6,26 +6,11 @@
 /*   By: vicperri <vicperri@student.42lyon.fr>      +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/02/11 10:04:09 by vicperri          #+#    #+#             */
-/*   Updated: 2025/02/11 13:32:06 by vicperri         ###   ########lyon.fr   */
+/*   Updated: 2025/02/12 16:27:40 by vicperri         ###   ########lyon.fr   */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "pipex.h"
-
-char	**free_all(char **res)
-{
-	size_t	i;
-
-	i = 0;
-	while (res[i])
-	{
-		free(res[i]);
-		res[i] = NULL;
-		i++;
-	}
-	free(res);
-	return (0);
-}
 
 void	start_waitpid(pid_t pid)
 {
@@ -53,7 +38,7 @@ char	*find_cmd(char *argv, char *envp)
 		dir_join = ft_strjoin(dir[i], cmd);
 		if (access(dir_join, F_OK) == 0)
 		{
-			printf("new dir : %s\n", dir_join);
+			printf("new dir : %s\n", dir_join); // A SUPP
 			free_all(dir);
 			free(cmd);
 			return (dir_join);
@@ -68,8 +53,8 @@ char	*find_cmd(char *argv, char *envp)
 
 int	find_path(char **envp)
 {
-	int i;
-	int j;
+	int	i;
+	int	j;
 
 	i = 0;
 	while (envp[i])
@@ -82,5 +67,6 @@ int	find_path(char **envp)
 		}
 		i++;
 	}
-	return (ERROR); // a voir le return
+	write(2, "ERROR: PATH not found\n", 23);
+	exit(127);
 }
