@@ -6,7 +6,7 @@
 /*   By: vicperri <vicperri@student.42lyon.fr>      +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/02/10 14:40:41 by vicperri          #+#    #+#             */
-/*   Updated: 2025/02/12 16:24:28 by vicperri         ###   ########lyon.fr   */
+/*   Updated: 2025/02/13 16:17:56 by vicperri         ###   ########lyon.fr   */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -51,9 +51,8 @@ void	start_child_one_process(char **argv, int *fd, char **envp)
 	infile_fd = open(argv[1], O_RDONLY);
 	if (infile_fd == ERROR)
 	{
-		write(2, "ERROR: permission denied: ", 27);
-		ft_putchar_err(argv[1]);
-		return ;
+		perror("ERROR");
+		exit(EXIT_FAILURE);
 	}
 	close(fd[0]);
 	dup2(infile_fd, STDIN_FILENO);
@@ -70,9 +69,8 @@ void	start_child_two_process(char **argv, int *fd, char **envp)
 	outfile_fd = open(argv[4], O_WRONLY | O_TRUNC | O_CREAT, 0644);
 	if (outfile_fd == ERROR)
 	{
-		write(2, "ERROR: permission denied: ", 27);
-		ft_putchar_err(argv[4]);
-		return ;
+		perror("ERROR");
+		exit(EXIT_FAILURE);
 	}
 	close(fd[1]);
 	dup2(fd[0], STDIN_FILENO);
@@ -112,20 +110,19 @@ void	start_parent_process(char **argv, int *fd, char **envp)
 int	main(int argc, char **argv, char **envp)
 {
 	int	fd[2];
-	int	infile_fd;
 
 	if (argc < 5)
-		return (0);
-	infile_fd = open(argv[1], O_RDONLY);
-	if (infile_fd == ERROR)
-	{
-		write(2, "ERROR: no such file or directory: ", 35);
-		ft_putchar_err(argv[1]);
-	}
-	else
-		close(infile_fd);
-	if (check_files(argv, argc) == ERROR)
-		exit(EXIT_FAILURE);
+		return (SUCCESS);
+	// if (argc < 5)
+	// {
+	// 	write(2, "ERROR: missing arguments\n", 25);
+	// 	return (SUCCESS);
+	// }
+	// if (argc > 5 && ft_strcmp(argv[3], "awk") != SUCCESS)
+	// {
+	// 	write(2, "ERROR: too much arguments\n", 27);
+	// 	return (ERROR);
+	// }
 	if (pipe(fd) == ERROR)
 	{
 		perror("pipe failed");

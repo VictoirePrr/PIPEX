@@ -6,7 +6,7 @@
 /*   By: vicperri <vicperri@student.42lyon.fr>      +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/02/11 10:04:09 by vicperri          #+#    #+#             */
-/*   Updated: 2025/02/12 16:27:40 by vicperri         ###   ########lyon.fr   */
+/*   Updated: 2025/02/13 15:55:32 by vicperri         ###   ########lyon.fr   */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -15,11 +15,18 @@
 void	start_waitpid(pid_t pid)
 {
 	int	status;
+	int exit_code;
 
 	if (waitpid(pid, &status, 0) == -1)
 	{
 		perror("waitpid failed");
 		exit(EXIT_FAILURE);
+	}
+	if (WIFEXITED(status))
+	{
+		exit_code = WIFEXITED(status);
+		if (exit_code != 0)
+			exit(exit_code);
 	}
 }
 

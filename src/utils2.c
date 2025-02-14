@@ -6,7 +6,7 @@
 /*   By: vicperri <vicperri@student.42lyon.fr>      +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/02/12 11:21:13 by vicperri          #+#    #+#             */
-/*   Updated: 2025/02/12 15:29:57 by vicperri         ###   ########lyon.fr   */
+/*   Updated: 2025/02/13 15:58:29 by vicperri         ###   ########lyon.fr   */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -40,17 +40,3 @@ void	ft_putchar_err(char *c)
 	write(2, "\n", 1);
 }
 
-int	check_files(char **argv, int argc)
-{
-	if (argc < 5)
-	{
-		write(2, "ERROR: missing argument\n", 25);
-		return (ERROR);
-	}
-	if (argc > 5 && ft_strcmp(argv[3], "awk") != SUCCESS)
-	{
-		write(2, "ERROR: too much arguments\n", 27);
-		return (ERROR);
-	}
-	return (SUCCESS);
-}
