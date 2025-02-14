@@ -6,7 +6,7 @@
 /*   By: vicperri <vicperri@student.42lyon.fr>      +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/01/07 11:28:17 by vicperri          #+#    #+#             */
-/*   Updated: 2025/02/12 14:47:33 by vicperri         ###   ########lyon.fr   */
+/*   Updated: 2025/02/14 13:48:47 by vicperri         ###   ########lyon.fr   */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -38,7 +38,5 @@ int		find_path(char **envp);
 char	*find_cmd(char *argv, char *envp);
 char	**free_all(char **res);
 void	start_waitpid(pid_t pid);
-int		check_files(char **argv, int argc);
-void	ft_putchar_err(char *c);
 void	execute_cmd(char *cmd_path, char **args, char **envp);
 #endif

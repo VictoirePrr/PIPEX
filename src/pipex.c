@@ -6,7 +6,7 @@
 /*   By: vicperri <vicperri@student.42lyon.fr>      +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/02/10 14:40:41 by vicperri          #+#    #+#             */
-/*   Updated: 2025/02/13 16:17:56 by vicperri         ###   ########lyon.fr   */
+/*   Updated: 2025/02/14 13:31:55 by vicperri         ###   ########lyon.fr   */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -17,31 +17,25 @@ void	find_and_execute_cmd(char *argv, char **envp)
 	int		envp_pos;
 	char	*cmd_path;
 	char	**args;
+	char	**args_test;
 
 	envp_pos = find_path(envp);
 	args = ft_split(argv, ' ');
 	cmd_path = find_cmd(args[0], envp[envp_pos]);
-	if (cmd_path == NULL)
+	if (!cmd_path)
 	{
 		write(2, "ERROR: command not found\n", 26);
 		free_all(args);
 		free(cmd_path);
 		exit(127);
 	}
-	execute_cmd(cmd_path, args, envp);
-}
-
-void	execute_cmd(char *cmd_path, char **args, char **envp)
-{
-	// if(ft_strcmp(args[0], "awk") == SUCCESS)
-	// 	args[1] = ft_strtrim(args[1], "'");
-	if (execve(cmd_path, args, envp) == ERROR)
+	if (ft_strcmp(args[0], "awk") == SUCCESS)
 	{
-		free_all(args);
-		free(cmd_path);
-		perror("execve failed");
-		exit(EXIT_FAILURE);
+		args_test = ft_split(argv, 39);
+		execute_cmd(cmd_path, args_test, envp);
 	}
+	else
+		execute_cmd(cmd_path, args, envp);
 }
 
 void	start_child_one_process(char **argv, int *fd, char **envp)
@@ -84,6 +78,7 @@ void	start_parent_process(char **argv, int *fd, char **envp)
 {
 	pid_t	pid1;
 	pid_t	pid2;
+	int		status;
 
 	pid1 = fork();
 	if (pid1 == ERROR)
@@ -103,7 +98,7 @@ void	start_parent_process(char **argv, int *fd, char **envp)
 		start_child_two_process(argv, fd, envp);
 	close(fd[0]);
 	close(fd[1]);
-	start_waitpid(pid1);
+	waitpid(pid1, &status, 0);
 	start_waitpid(pid2);
 }
 
@@ -112,17 +107,15 @@ int	main(int argc, char **argv, char **envp)
 	int	fd[2];
 
 	if (argc < 5)
+	{
+		write(2, "ERROR: missing arguments\n", 25);
 		return (SUCCESS);
-	// if (argc < 5)
-	// {
-	// 	write(2, "ERROR: missing arguments\n", 25);
-	// 	return (SUCCESS);
-	// }
-	// if (argc > 5 && ft_strcmp(argv[3], "awk") != SUCCESS)
-	// {
-	// 	write(2, "ERROR: too much arguments\n", 27);
-	// 	return (ERROR);
-	// }
+	}
+	if (argc > 5 && ft_strcmp(argv[3], "awk") != SUCCESS)
+	{
+		write(2, "ERROR: too much arguments\n", 27);
+		return (ERROR);
+	}
 	if (pipe(fd) == ERROR)
 	{
 		perror("pipe failed");

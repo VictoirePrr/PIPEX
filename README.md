@@ -1,74 +1,152 @@
-# What concepts is the project trying to teach me ? 
-- inter-process communication
-- Reproducing the use of the shell pipe operator in a C program
-- How does a process work : what is a parent and its child and how they work together.
-- How processes work ? What is going on when I run multiple commands on a program ?
-- What is the difference between a process and a program ?
-- File manipulations with fd
+# Pipex Project - 42
 
+## Overview
+The Pipex project simulates the behavior of a simple shell pipeline. It implements piping between processes, handling file redirection, and executing commands using `execve()`. This project requires an in-depth understanding of system calls such as `fork()`, `execve()`, `waitpid()`, `pipe()`, and file descriptor management.
 
-So if I want to duplicate a process I can you the function fork.
-My initial process will become a parent and the copy of its process will becore a child.
-The child starts to work in your program from the moment he is called. He will not re-read your program from the start. So the parent and the child technically work on the same things at the same time. 
+The project also emphasizes proper memory management, with a focus on freeing dynamically allocated memory using helper functions like `free_all()`.
 
-Changes done on the parent won´t affect the child and changes made on the child would not affect the parent. 
+## Objectives
+- **Process Creation & Management**: Using `fork()` to create child processes and `waitpid()` to manage them in the parent process.
+- **Pipes**: Implementing communication between child processes using pipes (`pipe()`).
+- **Redirection**: Handling file redirection for both input and output.
+- **Error Handling**: Ensuring robust error handling for process execution and system calls.
+- **Memory Management**: Properly freeing dynamically allocated memory with helper functions like `free_all()`.
 
-The parent must wait (with wait or waitpid) that its child finished working to remove its child entry from the process table and then finish. Otherwise, the child will become a zombie, a body with no brain in a way. 
+## Key Functions
 
-A child can terminate because of an exit(num) or because of a return in the main or by a segfault.
+## start_waitpid(pid_t pid)
+Waits for the child process specified by `pid` to finish using `waitpid()`. It handles both the exit status and any signals that may have terminated the process.
 
-The waitpid   function will help you in knowing which child terminated because of itś RETURN but you can also retrieve its STATUS and compare the status with macros given to check how your child exited.
+```c
+void start_waitpid(pid_t pid)
+{
+    int status;
+    int exit_code;
 
-You can kill a child for multiple reasons, the obvious one would be to not having to take care of him for the next 18 years in the crisis we live in, but suprisingly it is most of the time because the child process is unresponsive, there is an error or simply because there is a timeout. To do this, you just have to call the kill function which will send the right signal to the ight process. The parent MUST wait for the child to terminate to finish. This way the child does not become a zombie and is cleaned up properly.
+    if (waitpid(pid, &status, 0) == -1)
+    {
+        perror("waitpid failed");
+        exit(EXIT_FAILURE);
+    }
+    if (WIFEXITED(status))
+    {
+        exit_code = WEXITSTATUS(status);
+        exit(exit_code);
+    }
+    else if (WIFSIGNALED(status))
+        exit(128 + WTERMSIG(status));
+}
+```
+## find_cmd(char *argv, char *envp)
+This function attempts to locate the command (`argv`) in directories listed in the `PATH` environment variable (`envp`). It returns the full path to the executable if found, or `NULL` if not.
 
-A file descriptor table is a tab where informations about files that are opened by a process are stored. Each fd is a integer. Every processes inherit a fd table with 0 for the stdin, 1 for stdout and 2 for stderr. Then if the process open a file, the file will be given a fd too. It is a way of representing opened files.
+```c
+char *find_cmd(char *argv, char *envp)
+{
+    int i = 0;
+    char **dir;
+    char *cmd;
+    char *dir_join;
 
-### Using pipe :
-< infile grep a1 | wc -w > outfile 
-    --> will grep the word a1 in the infile and the pipe will take this information to the wc -w command to count the num of words and print this info on the outfile. 
+    if (!argv)
+        return (NULL);
+    dir = ft_split(envp, ':');
+    cmd = ft_strjoin("/", argv);
+    while (dir[i])
+    {
+        dir_join = ft_strjoin(dir[i], cmd);
+        if (access(dir_join, F_OK) == 0)
+        {
+            free_all(dir);
+            free(cmd);
+            return (dir_join);
+        }
+        free(dir_join);
+        i++;
+    }
+    free_all(dir);
+    free(cmd);
+    return (NULL);
+}
+```
 
-### The command line look something like that : 
-< infile grep a1 | wc -w > outfile
+## find_path(char **envp)
+Searches for the `PATH` variable in the environment and returns the index of the line containing `PATH`. This is essential for determining where to look for executable files.
 
-### Yours will look like this :
-./pipex infile "grep hello" "wc -w" outfile
+```c
+int find_path(char **envp)
+{
+    int i = 0;
+    int j;
 
+    while (envp[i])
+    {
+        j = 0;
+        if (envp[i][j] == 'P' && envp[i][j + 1] == 'A')
+        {
+            if (envp[i][j + 2] == 'T' && envp[i][j + 3] == 'H')
+                return (i);
+        }
+        i++;
+    }
+    write(2, "ERROR: PATH not found\n", 23);
+    exit(127);
+}
+```
 
+## execute_cmd(char *cmd_path, char **args, char **envp)
+Executes a command specified by `cmd_path` with arguments `args` using `execve()`. If the execution fails, it frees allocated memory and exits the program with an error message.
 
-## Contraints :
-The way pipes are described generally is that it redirects the output of one command to the input of the next command. That is correct. But there's a catch, when you build pipex, you have to launch a new child process for each command you want to do, and they are all made at the same time.
+```c
+void execute_cmd(char *cmd_path, char **args, char **envp)
+{
+    if (execve(cmd_path, args, envp) == ERROR)
+    {
+        free_all(args);
+        free(cmd_path);
+        perror("execve failed");
+        exit(EXIT_FAILURE);
+    }
+}
+```
 
-That means all commands are run at the same time, it's just that they will wait for the writing end of the pipe to be closed before reading from the pipe.
+## Error Handling
 
+- **Command Not Found**: If the command cannot be found in the directories listed in `PATH`, the program exits with a message and a 127 exit status.
+- **Execution Failure**: If `execve()` fails, an error message is displayed, memory is freed, and the program exits with `EXIT_FAILURE`.
+- **waitpid() Failures**: If `waitpid()` fails to properly wait for a child process, an error message is shown, and the program exits.
 
+## Example Usage
 
-# Functions that will be usefull :
+To run the `pipex` program, you need to pass the following arguments:
 
-## int access(const char *pathname, int mode);
-- access() checks whether the program can access the file pathname. 
-- The mode specifies the accessibility check(s) to be performed, and is either the value F_OK, or a mask consisting of the bitwise OR of one or more of R_OK, W_OK, and X_OK. F_OK tests for the existence of the file. R_OK, W_OK, and X_OK test whether the file exists and grants read, write, and execute permissions, respectively.
-- On success (all requested permissions granted), zero is returned. On error (at least one bit in mode asked for a permission that is denied, or some other error occurred), -1 is returned, and errno is set appropriately.
+```bash
+./pipex infile "cmd1" "cmd2" outfile
+```
 
-## int dup2(int oldfd, int newfd);
-- So that the commands like grep will be able to get informations in the file we want instead of the stdin.
-- "Now, we use the execve() function to execute the grep. When grep is launched without any argument, it reads text from the standard input before executing.
-BUT we replaced the stdin file descriptor by in, so grep will read from the standard input, the standard input now reads from the in file, so grep will execute on whatever the content of the in file is."
+Where:
+- `infile` is the file from which the first command should read its input.
+- `"cmd1"` and `"cmd2"` are the commands to be executed in the pipeline.
+- `outfile` is the file where the output of the final command will be written.
 
-## int pipe(int pipefd[2]);
-- to create a pipe
-- Definition : A pipe redirects the output of the command on the left to the input of the command on the right. 
+Example:
+```bash
+./pipex infile "ls -la" "wc -l" outfile
+```
 
-## pid_t fork(void);
-- duplicate a process, creates a child
+This will:
 
-## pid_t waitpid(pid_t pid, int *status, int options);
-- You can choose which child to wait for
-- makes the parent wait for its child to finish before finishing
-- gives back the PID of the child and its exit status to the parent so that the child would be cleaned up by the kernel.
+- Run `ls -la` on the current directory to list all files and directories in long format.
+- Pass the output to `wc -l` to count the number of lines (i.e., the number of files and directories).
+- Write the result (the count of files and directories) to `outfile`.
 
-## pid_t wait(int *status);
-- Same as waitpid but will make the parent wait for the first child to finish before finishing.
+### Challenges Encountered
 
-## int execve(const char *filename, char *const argv[], char *const envp[]);
+- **Argument Parsing**: Handling arguments like `{ print $2 }` properly, ensuring that `$2` is not interpreted as a shell variable.
+- **Memory Management**: Managing memory properly, particularly when freeing dynamically allocated memory for arrays and strings using `free_all()`.
+- **Pipe Handling**: Ensuring that pipes work correctly between child processes and that input/output redirection is handled properly.
+- **Process Synchronization**: Using `waitpid()` effectively to wait for child processes to terminate and return appropriate exit codes.
 
-## int unlink(const char *pathname);
+### Conclusion
+
+The Pipex project demonstrates the core concepts of process management, inter-process communication, and file manipulation in a Unix environment. By creating a simplified version of the pipe system, this project provides a solid foundation for understanding system calls and process management in C.
