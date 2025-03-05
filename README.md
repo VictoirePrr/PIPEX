@@ -1,4 +1,4 @@
-# Pipex Project - 42
+# Pipex Project 👭
 
 ## Overview
 The Pipex project simulates the behavior of a simple shell pipeline. It implements piping between processes, handling file redirection, and executing commands using `execve()`. This project requires an in-depth understanding of system calls such as `fork()`, `execve()`, `waitpid()`, `pipe()`, and file descriptor management.
